@@ -5,7 +5,7 @@ from pathlib import Path
 
 import torch
 from datasets import DatasetDict
-from peft import AutoPeftModelForCausalLM, LoraConfig
+from peft import AutoPeftModelForCausalLM, LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, pipeline
 from trl import SFTConfig, SFTTrainer
 
@@ -118,20 +118,31 @@ def load_model_and_tokenizer(model_name: str, quantized: bool = True):
     return model, tokenizer
 
 
+def build_trainable_lora_model(model, config: TrainingConfig):
+    model = prepare_model_for_kbit_training(
+        model,
+        use_gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": False},
+    )
+    model = get_peft_model(model, build_lora_config(config))
+    model.train()
+    return model
+
+
 def train_qlora(examples: list[CypherExample], config: TrainingConfig) -> SFTTrainer:
     configure_cuda_backend()
     datasets = build_dataset_dict(examples)
-    model, tokenizer = load_model_and_tokenizer(
+    base_model, tokenizer = load_model_and_tokenizer(
         config.base_model,
         quantized=True,
     )
+    model = build_trainable_lora_model(base_model, config)
     model.config.use_cache = False
     trainer = SFTTrainer(
         model=model,
         processing_class=tokenizer,
         train_dataset=datasets["train"],
         eval_dataset=datasets.get("validation"),
-        peft_config=build_lora_config(config),
         args=build_sft_config(config),
     )
     trainer.train()
