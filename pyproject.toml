@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cypher-slm"
+version = "0.1.0"
+description = "Colab-first text-to-Cypher fine-tuning pipeline for SmolLM2-360M"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "accelerate>=1.5.2",
+  "bitsandbytes>=0.45.3; platform_system == 'Linux'",
+  "datasets>=3.4.1",
+  "jinja2>=3.1.6",
+  "neo4j>=5.28.1",
+  "pandas>=2.2.3",
+  "peft>=0.14.0",
+  "pytest>=8.3.5",
+  "rich>=13.9.4",
+  "tenacity>=9.0.0",
+  "torch>=2.6.0",
+  "transformers>=4.51.3",
+  "trl>=0.16.1"
+]
+
+[tool.setuptools.packages.find]
+include = ["cypher_slm*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

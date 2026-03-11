@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+artifacts/
+reports/
+checkpoints/
+.ipynb_checkpoints/
+.DS_Store
