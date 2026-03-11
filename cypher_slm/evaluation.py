@@ -22,6 +22,7 @@ class EvaluationRecord:
     question: str
     expected_cypher: str
     generated_cypher: str
+    exact_match: bool
     syntax_valid: bool
     execution_success: bool
     result_correct: bool
@@ -103,7 +104,10 @@ def evaluate_examples(
             started = time.perf_counter()
             generated = generator(example.schema_text, example.question)
             latency = time.perf_counter() - started
-            syntax_valid = bool(normalize_cypher(generated))
+            normalized_generated = normalize_cypher(generated)
+            normalized_expected = normalize_cypher(example.cypher)
+            syntax_valid = bool(normalized_generated)
+            exact_match = normalized_generated.lower() == normalized_expected.lower()
             execution_success = False
             result_correct = False
             error = None
@@ -122,6 +126,7 @@ def evaluate_examples(
                     question=example.question,
                     expected_cypher=example.cypher,
                     generated_cypher=generated,
+                    exact_match=exact_match,
                     syntax_valid=syntax_valid,
                     execution_success=execution_success,
                     result_correct=result_correct,
