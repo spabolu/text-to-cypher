@@ -28,7 +28,7 @@ Open `main.ipynb` in Google Colab and run top-to-bottom. The notebook is designe
 3. ingest and normalize data
 4. generate schema-aware synthetic examples
 5. baseline the untuned model
-6. populate the in-notebook Neo4j config cell before execution-based evaluation
+6. populate the in-notebook Neo4j config cell and let the notebook introspect the live Aura schema before execution-based evaluation
 7. fine-tune with QLoRA
 8. evaluate the tuned model and export summary artifacts
 

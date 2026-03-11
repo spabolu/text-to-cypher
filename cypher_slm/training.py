@@ -150,6 +150,7 @@ def build_generation_pipeline(model_name_or_path: str):
         model=model,
         tokenizer=tokenizer,
     )
+    task.model.generation_config.max_length = None
     return task
 
 
