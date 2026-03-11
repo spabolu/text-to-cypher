@@ -14,11 +14,16 @@ from .data import CypherExample, examples_to_dataset
 from .prompts import SYSTEM_PROMPT, render_user_prompt
 
 
+def current_cuda_dtype():
+    ensure_cuda_available()
+    return torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+
+
 def build_quantization_config() -> BitsAndBytesConfig:
     return BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_compute_dtype=current_cuda_dtype(),
         bnb_4bit_use_double_quant=True,
     )
 
@@ -41,8 +46,13 @@ def ensure_cuda_available() -> None:
         )
 
 
-def build_sft_config(config: TrainingConfig) -> SFTConfig:
+def configure_cuda_backend() -> None:
     ensure_cuda_available()
+    torch.set_float32_matmul_precision("high")
+
+
+def build_sft_config(config: TrainingConfig) -> SFTConfig:
+    configure_cuda_backend()
     bf16 = torch.cuda.is_bf16_supported()
     return SFTConfig(
         output_dir=config.output_dir,
@@ -79,12 +89,11 @@ def build_dataset_dict(examples: list[CypherExample]) -> DatasetDict:
 
 
 def _resolve_model_dtype():
-    ensure_cuda_available()
-    return torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+    return current_cuda_dtype()
 
 
 def load_model_and_tokenizer(model_name: str, quantized: bool = True):
-    ensure_cuda_available()
+    configure_cuda_backend()
     model_path = Path(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     if tokenizer.pad_token is None:
@@ -108,7 +117,7 @@ def load_model_and_tokenizer(model_name: str, quantized: bool = True):
 
 
 def train_qlora(examples: list[CypherExample], config: TrainingConfig) -> SFTTrainer:
-    ensure_cuda_available()
+    configure_cuda_backend()
     datasets = build_dataset_dict(examples)
     model, tokenizer = load_model_and_tokenizer(
         config.base_model,
@@ -138,7 +147,6 @@ def build_generation_pipeline(model_name_or_path: str):
         "text-generation",
         model=model,
         tokenizer=tokenizer,
-        device_map="auto",
     )
     return task
 

@@ -30,17 +30,17 @@ class ArtifactPaths:
 class TrainingConfig:
     base_model: str = "HuggingFaceTB/SmolLM2-360M-Instruct"
     output_dir: str = "artifacts/models/smollm2-360m-cypher"
-    max_length: int = 768
+    max_length: int = 1024
     learning_rate: float = 2e-4
     num_train_epochs: float = 3.0
-    per_device_train_batch_size: int = 8
-    per_device_eval_batch_size: int = 8
-    gradient_accumulation_steps: int = 2
+    per_device_train_batch_size: int = 16
+    per_device_eval_batch_size: int = 16
+    gradient_accumulation_steps: int = 1
     warmup_ratio: float = 0.05
     weight_decay: float = 0.01
-    logging_steps: int = 10
-    eval_steps: int = 50
-    save_steps: int = 50
+    logging_steps: int = 5
+    eval_steps: int = 25
+    save_steps: int = 25
     max_steps: int = -1
     lora_r: int = 32
     lora_alpha: int = 64
