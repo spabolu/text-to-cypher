@@ -98,6 +98,7 @@ def load_model_and_tokenizer(model_name: str, quantized: bool = True):
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "right"
     quantization_config = build_quantization_config() if quantized else None
     if model_path.exists() and (model_path / "adapter_config.json").exists():
         model = AutoPeftModelForCausalLM.from_pretrained(
@@ -112,6 +113,7 @@ def load_model_and_tokenizer(model_name: str, quantized: bool = True):
             quantization_config=quantization_config,
             torch_dtype=_resolve_model_dtype(),
         )
+    model.config.pad_token_id = tokenizer.pad_token_id
     model.eval()
     return model, tokenizer
 
@@ -156,8 +158,12 @@ def generate_query(generator, schema_text: str, question: str, max_new_tokens: i
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": render_user_prompt(schema_text, question)},
     ]
-    outputs = generator(messages, max_new_tokens=max_new_tokens, do_sample=False, temperature=None)
-    generated = outputs[0]["generated_text"][-1]["content"]
+    outputs = generator(messages, max_new_tokens=max_new_tokens, do_sample=False)
+    generated_payload = outputs[0]["generated_text"]
+    if isinstance(generated_payload, list):
+        generated = generated_payload[-1]["content"]
+    else:
+        generated = str(generated_payload)
     return generated.strip()
 
 
