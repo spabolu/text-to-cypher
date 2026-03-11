@@ -55,6 +55,21 @@ def execute_cypher(
     return rows
 
 
+def verify_neo4j_connection(
+    uri: str,
+    username: str,
+    password: str,
+    database: str | None = None,
+) -> None:
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+    try:
+        driver.verify_connectivity()
+        with driver.session(database=database) as session:
+            session.run("RETURN 1 AS ok").single()
+    finally:
+        driver.close()
+
+
 def evaluate_examples(
     examples: Iterable[CypherExample],
     model_id: str,
